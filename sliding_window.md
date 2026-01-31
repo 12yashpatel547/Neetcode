@@ -334,5 +334,3 @@ const countSubarrays = (nums, k) => {
 * **Alternative Approach:** We could store the indices of the max element in an array and use them to calculate distances, but this sliding window is more memory-efficient.
 
 ---
-
-Would you like me to analyze a different pattern next, such as **Trees** or **Dynamic Programming**?
