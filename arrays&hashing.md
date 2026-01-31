@@ -1,6 +1,7 @@
-# Senior Software Engineer Study Guide: Arrays & Hashing (2026 Masterclass)
+# Senior Software Engineer Study Guide: Arrays & Hashing (2026 Edition)
 
-This study guide focuses on the **Arrays & Hashing** pattern. In 2026, high-tier technical interviews (Google, Meta, OpenAI) have shifted beyond simple map lookups. They now prioritize **space-efficiency**, **one-pass algorithms**, and the ability to map complex state into flattened structures.
+## Overview & Trend Analysis
+As a senior engineer, I categorize the **Arrays & Hashing** pattern not just as "using a Map," but as the art of **Frequency Analysis** and **State Mapping**. In 2026, high-tier interviews focus on one-pass solutions and minimizing auxiliary space. The trending problems (11 and 12) specifically test your ability to map 2D coordinates into 1D frequency arrays and apply greedy logic to sorted hashing.
 
 ---
 
@@ -8,31 +9,37 @@ This study guide focuses on the **Arrays & Hashing** pattern. In 2026, high-tier
 [LeetCode 217](https://leetcode.com/problems/contains-duplicate/)
 
 ### Complexity
-* **Time Complexity:** $O(n)$
-* **Space Complexity:** $O(n)$
+* **Time Complexity:** $O(totalElements)$
+* **Space Complexity:** $O(totalElements)$
 
 ### Key Intuition
-Use a `Set` to provide $O(1)$ average-time lookups. By trading space for time, we avoid the $O(n^2)$ brute-force approach.
+Trade memory for speed. By utilizing a `Set`, we achieve $O(1)$ lookups to check if we've encountered a value before, avoiding a nested loop comparison.
 
 ### Pseudocode
-1. Initialize an empty `Set` called `seenElements`.
+1. Initialize an empty `Set` named `seenElements`.
 2. Iterate through each `currentNumber` in the input array.
-3. If `seenElements` already contains `currentNumber`, return `true` (duplicate found).
+3. If `currentNumber` already exists in `seenElements`, return `true`.
 4. Otherwise, add `currentNumber` to `seenElements`.
-5. If the loop finishes without a match, return `false`.
+5. If the loop completes, return `false`.
 
 ### Edge Cases
-* **Empty Array:** Return `false`.
-* **Single Element:** Return `false`.
+* **Empty Input:** Should return `false` as no duplicates can exist.
+* **Single Element:** Should return `false`.
+* **All Identical Elements:** Should return `true` immediately upon the second element.
 
 ### JavaScript Solution
 ```javascript
 const containsDuplicate = (numbers) => {
     const seenElements = new Set();
+
     for (const currentNumber of numbers) {
-        if (seenElements.has(currentNumber)) return true;
+        // If the number is already in the set, we found a duplicate
+        if (seenElements.has(currentNumber)) {
+            return true;
+        }
         seenElements.add(currentNumber);
     }
+
     return false;
 };
 ```
@@ -43,37 +50,49 @@ const containsDuplicate = (numbers) => {
 [LeetCode 242](https://leetcode.com/problems/valid-anagram/)
 
 ### Complexity
-* **Time Complexity:** $O(n)$
-* **Space Complexity:** $O(1)$ — Bound by the alphabet size (26).
+* **Time Complexity:** $O(totalCharacters)$
+* **Space Complexity:** $O(1)$ — The hash map/object size is capped at 26 for English characters.
 
 ### Key Intuition
-Instead of sorting, we use a frequency map. If two strings are anagrams, their character counts must be identical across the entire alphabet.
+If two strings are anagrams, their character frequencies must match perfectly. Instead of sorting (which is $O(totalCharacters \log totalCharacters)$), we use a single frequency map to balance counts.
 
 ### Pseudocode
-1. If lengths of `stringOne` and `stringTwo` differ, return `false`.
-2. Initialize a `characterFrequencyMap` (object or array of size 26).
-3. Loop through the strings:
-    - Increment the count for the character in `stringOne`.
-    - Decrement the count for the character in `stringTwo`.
-4. Iterate through the map: if any count is not zero, return `false`.
-5. Return `true`.
+1. Check if `stringOne.length` equals `stringTwo.length`. If not, return `false`.
+2. Initialize an empty object `characterCounts`.
+3. Iterate through `stringOne` and increment the count for each character.
+4. Iterate through `stringTwo` and decrement the count for each character.
+5. Check if all values in `characterCounts` are zero.
 
 ### Edge Cases
-* **Different Lengths:** Immediate `false`.
+* **Different Lengths:** Handled by the initial length check.
 * **Empty Strings:** Technically anagrams, return `true`.
+* **Case Sensitivity:** Usually, interviewers assume lowercase, but confirm if 'A' === 'a'.
 
 ### JavaScript Solution
 ```javascript
 const isAnagram = (stringOne, stringTwo) => {
-    if (stringOne.length !== stringTwo.length) return false;
-    const characterFrequencyMap = {};
-
-    for (let indexCounter = 0; indexCounter < stringOne.length; indexCounter++) {
-        characterFrequencyMap[stringOne[indexCounter]] = (characterFrequencyMap[stringOne[indexCounter]] || 0) + 1;
-        characterFrequencyMap[stringTwo[indexCounter]] = (characterFrequencyMap[stringTwo[indexCounter]] || 0) - 1;
+    if (stringOne.length !== stringTwo.length) {
+        return false;
     }
 
-    return Object.values(characterFrequencyMap).every(count => count === 0);
+    const characterCounts = {};
+
+    for (let indexCounter = 0; indexCounter < stringOne.length; indexCounter++) {
+        const charFromOne = stringOne[indexCounter];
+        const charFromTwo = stringTwo[indexCounter];
+
+        characterCounts[charFromOne] = (characterCounts[charFromOne] || 0) + 1;
+        characterCounts[charFromTwo] = (characterCounts[charFromTwo] || 0) - 1;
+    }
+
+    // Every key must have a balance of 0 if they are anagrams
+    for (const character in characterCounts) {
+        if (characterCounts[character] !== 0) {
+            return false;
+        }
+    }
+
+    return true;
 };
 ```
 
@@ -85,32 +104,40 @@ const isAnagram = (stringOne, stringTwo) => {
 
 
 ### Complexity
-* **Time Complexity:** $O(n)$
-* **Space Complexity:** $O(n)$
+* **Time Complexity:** $O(totalElements)$
+* **Space Complexity:** $O(totalElements)$
 
 ### Key Intuition
-Use a "Complementary Lookup" strategy. For every number, calculate what value is needed to reach the target. If we've seen that value before, we have a pair.
+Instead of searching for two numbers, search for the **complement**. For any `currentNumber`, we are looking for `targetSum - currentNumber`. We store previously seen numbers in a Map for instant retrieval.
 
 ### Pseudocode
-1. Initialize an empty Map `valueToIndexMap`.
-2. Iterate through `numbersArray` with `currentIndex`.
-3. Calculate `requiredComplement = targetSum - currentNumber`.
-4. Check if `valueToIndexMap` contains `requiredComplement`.
-5. If it does, return `[valueToIndexMap.get(requiredComplement), currentIndex]`.
-6. Else, store `currentNumber` and `currentIndex` in the map.
+1. Initialize `numberToIndexMap`.
+2. For each `currentNumber` and `indexCounter` in the array:
+    - Calculate `neededComplement = targetSum - currentNumber`.
+    - If `neededComplement` exists in the map, return `[map[neededComplement], indexCounter]`.
+    - Otherwise, store `currentNumber` with its `indexCounter` in the map.
+
+### Edge Cases
+* **Negative Numbers:** The logic holds as `targetSum - (-number)` correctly calculates the required positive/negative value.
+* **Same Number Used Twice:** The map ensures we don't use the same index unless two separate instances of the number exist in the array.
 
 ### JavaScript Solution
 ```javascript
 const twoSum = (numbers, targetSum) => {
-    const valueToIndexMap = new Map();
+    const numberToIndexMap = new Map();
+
     for (let indexCounter = 0; indexCounter < numbers.length; indexCounter++) {
         const currentNumber = numbers[indexCounter];
-        const requiredComplement = targetSum - currentNumber;
-        if (valueToIndexMap.has(requiredComplement)) {
-            return [valueToIndexMap.get(requiredComplement), indexCounter];
+        const neededComplement = targetSum - currentNumber;
+
+        if (numberToIndexMap.has(neededComplement)) {
+            return [numberToIndexMap.get(neededComplement), indexCounter];
         }
-        valueToIndexMap.set(currentNumber, indexCounter);
+
+        numberToIndexMap.set(currentNumber, indexCounter);
     }
+
+    return [];
 };
 ```
 
@@ -120,35 +147,47 @@ const twoSum = (numbers, targetSum) => {
 [LeetCode 49](https://leetcode.com/problems/group-anagrams/)
 
 ### Complexity
-* **Time Complexity:** $O(n \cdot m)$ where $m$ is avg string length.
-* **Space Complexity:** $O(n \cdot m)$
+* **Time Complexity:** $O(totalStrings \cdot averageStringLength)$
+* **Space Complexity:** $O(totalStrings \cdot averageStringLength)$
 
 ### Key Intuition
-Generate a unique key for each group of anagrams. In 2026, high-performance solutions use a frequency-count string (e.g., "1#0#2...") as the key to avoid $O(m \log m)$ sorting.
+We need a way to generate a **canonical key** for any group of anagrams. In 2026, we avoid sorting each string and instead use a frequency-count string (e.g., "1#0#2#0...") as the Map key.
 
 ### Pseudocode
-1. Initialize `anagramGroupsMap` (Object).
-2. For each `currentString` in the input:
-    - Create a frequency array of size 26.
-    - Count each character in `currentString`.
-    - Join the array with a delimiter (e.g., "#") to create a `uniqueKey`.
-    - Append `currentString` to the list at `anagramGroupsMap[uniqueKey]`.
-3. Return the values of the map.
+1. Initialize `anagramGroupsMap`.
+2. For each `currentString`:
+    - Create a frequency array of size 26 for 'a'-'z'.
+    - Populate the array by counting characters.
+    - Convert that array into a delimited string (the `groupKey`).
+    - Append `currentString` to the array at `anagramGroupsMap[groupKey]`.
+3. Return all values from the map.
+
+### Edge Cases
+* **Empty String in List:** `""` should be grouped with other `""`.
+* **Single Character Strings:** Should group correctly based on the character.
 
 ### JavaScript Solution
 ```javascript
 const groupAnagrams = (stringList) => {
-    const groupsMap = {};
+    const anagramGroupsMap = {};
+
     for (const currentString of stringList) {
-        const countsArray = new Array(26).fill(0);
+        const characterFrequencies = new Array(26).fill(0);
         for (const character of currentString) {
-            countsArray[character.charCodeAt(0) - 97]++;
+            const charCodeIndex = character.charCodeAt(0) - 97; // 'a' is 97
+            characterFrequencies[charCodeIndex]++;
         }
-        const uniqueKey = countsArray.join("#");
-        if (!groupsMap[uniqueKey]) groupsMap[uniqueKey] = [];
-        groupsMap[uniqueKey].push(currentString);
+
+        // Generate a stable key like "1#0#2..."
+        const groupKey = characterFrequencies.join("#");
+
+        if (!anagramGroupsMap[groupKey]) {
+            anagramGroupsMap[groupKey] = [];
+        }
+        anagramGroupsMap[groupKey].push(currentString);
     }
-    return Object.values(groupsMap);
+
+    return Object.values(anagramGroupsMap);
 };
 ```
 
@@ -160,38 +199,43 @@ const groupAnagrams = (stringList) => {
 
 
 ### Complexity
-* **Time Complexity:** $O(n)$
-* **Space Complexity:** $O(n)$
+* **Time Complexity:** $O(totalElements)$
+* **Space Complexity:** $O(totalElements)$
 
 ### Key Intuition
-Bucket Sort. The maximum frequency an element can have is the length of the array. Use an array of lists where the index is the frequency.
+Use **Bucket Sort**. The maximum frequency of any element is equal to the array length. We create "buckets" where the index represents the frequency. This bypasses the need for $O(N \log N)$ sorting.
 
 ### Pseudocode
-1. Count the frequency of each number using `frequencyMap`.
-2. Create `bucketList`, an array of empty arrays, with length `inputArray.length + 1`.
-3. For each `number` in `frequencyMap`, place it in `bucketList[frequency]`.
-4. Iterate through `bucketList` from the end (highest frequency) to the beginning.
-5. Collect elements until the result array has `k` elements.
+1. Create a `frequencyMap` to count occurrences.
+2. Create `buckets` (array of arrays) where `buckets.length` is `numbers.length + 1`.
+3. For each `[number, count]` in the map, push `number` into `buckets[count]`.
+4. Iterate backward through `buckets` and collect numbers until we have `k` elements.
+
+### Edge Cases
+* **k Equals Array Length:** All elements are returned.
+* **All Elements have same frequency:** Any `k` elements are valid; the bucket logic handles this.
 
 ### JavaScript Solution
 ```javascript
 const topKFrequent = (numbers, k) => {
     const frequencyMap = new Map();
     const buckets = Array.from({ length: numbers.length + 1 }, () => []);
-    
-    for (const number of numbers) {
-        frequencyMap.set(number, (frequencyMap.get(number) || 0) + 1);
+
+    for (const currentNumber of numbers) {
+        frequencyMap.set(currentNumber, (frequencyMap.get(currentNumber) || 0) + 1);
     }
-    
+
     for (const [number, count] of frequencyMap) {
         buckets[count].push(number);
     }
-    
-    const topElementsResult = [];
-    for (let indexCounter = buckets.length - 1; indexCounter >= 0; indexCounter--) {
-        for (const element of buckets[indexCounter]) {
-            topElementsResult.push(element);
-            if (topElementsResult.length === k) return topElementsResult;
+
+    const topKResults = [];
+    for (let bucketIndex = buckets.length - 1; bucketIndex >= 0; bucketIndex--) {
+        for (const element of buckets[bucketIndex]) {
+            topKResults.push(element);
+            if (topKResults.length === k) {
+                return topKResults;
+            }
         }
     }
 };
@@ -203,37 +247,44 @@ const topKFrequent = (numbers, k) => {
 [LeetCode 238](https://leetcode.com/problems/product-of-array-except-self/)
 
 ### Complexity
-* **Time Complexity:** $O(n)$
-* **Space Complexity:** $O(1)$ (excluding output array)
+* **Time Complexity:** $O(totalElements)$
+* **Space Complexity:** $O(1)$ — Excluding the output array per problem constraints.
 
 ### Key Intuition
-An element's result is the product of all elements to its left multiplied by all elements to its right. We can calculate these in two passes.
+For any index `i`, the product is `(everything to the left) * (everything to the right)`. We can calculate prefix products in one pass and suffix products in another pass, combining them in the output array.
 
 ### Pseudocode
-1. Initialize `resultArray` filled with 1s.
-2. Initialize `prefixProduct` to 1.
-3. Pass 1 (Left to Right): Store `prefixProduct` in `resultArray[i]`, then multiply `prefixProduct` by `numbers[i]`.
-4. Initialize `suffixProduct` to 1.
-5. Pass 2 (Right to Left): Multiply `resultArray[i]` by `suffixProduct`, then multiply `suffixProduct` by `numbers[i]`.
+1. Initialize `outputProducts` with 1s.
+2. Maintain `prefixAccumulator = 1`. Iterate left-to-right:
+    - Set `outputProducts[index]` to `prefixAccumulator`.
+    - Update `prefixAccumulator` by multiplying it with `numbers[index]`.
+3. Maintain `suffixAccumulator = 1`. Iterate right-to-left:
+    - Multiply `outputProducts[index]` by `suffixAccumulator`.
+    - Update `suffixAccumulator` by multiplying it with `numbers[index]`.
+
+### Edge Cases
+* **Array contains one zero:** All products except the zero-index will be 0.
+* **Array contains multiple zeros:** All products will be 0.
 
 ### JavaScript Solution
 ```javascript
 const productExceptSelf = (numbers) => {
-    const resultArray = new Array(numbers.length).fill(1);
-    let cumulativeProduct = 1;
+    const totalLength = numbers.length;
+    const outputProducts = new Array(totalLength).fill(1);
 
-    for (let indexCounter = 0; indexCounter < numbers.length; indexCounter++) {
-        resultArray[indexCounter] = cumulativeProduct;
-        cumulativeProduct *= numbers[indexCounter];
+    let leftProductAccumulator = 1;
+    for (let indexCounter = 0; indexCounter < totalLength; indexCounter++) {
+        outputProducts[indexCounter] = leftProductAccumulator;
+        leftProductAccumulator *= numbers[indexCounter];
     }
 
-    cumulativeProduct = 1;
-    for (let indexCounter = numbers.length - 1; indexCounter >= 0; indexCounter--) {
-        resultArray[indexCounter] *= cumulativeProduct;
-        cumulativeProduct *= numbers[indexCounter];
+    let rightProductAccumulator = 1;
+    for (let indexCounter = totalLength - 1; indexCounter >= 0; indexCounter--) {
+        outputProducts[indexCounter] *= rightProductAccumulator;
+        rightProductAccumulator *= numbers[indexCounter];
     }
 
-    return resultArray;
+    return outputProducts;
 };
 ```
 
@@ -243,44 +294,52 @@ const productExceptSelf = (numbers) => {
 [LeetCode 36](https://leetcode.com/problems/valid-sudoku/)
 
 ### Complexity
-* **Time Complexity:** $O(1)$ (Fixed grid)
-* **Space Complexity:** $O(1)$
+* **Time Complexity:** $O(1)$ — Grid is always $9 \times 9$.
+* **Space Complexity:** $O(1)$ — Memory used for sets is constant.
 
 ### Key Intuition
-Use sets to track digits for each row, column, and $3 \times 3$ sub-box. The box index is calculated as `(row/3)*3 + (col/3)`.
+Validate three rules: unique in Row, unique in Column, unique in $3 \times 3$ Box. The challenge is calculating the Box index. A reliable formula is `Math.floor(rowIndex / 3) * 3 + Math.floor(columnIndex / 3)`.
 
 ### Pseudocode
-1. Create 9 Sets each for `rows`, `cols`, and `boxes`.
-2. Iterate through every cell in the $9 \times 9$ grid.
-3. If cell is empty ("."), skip it.
-4. Check if the value exists in `rows[r]`, `cols[c]`, or `boxes[boxIndex]`.
-5. If exists, return `false`.
-6. Else, add the value to all three sets.
-7. Return `true` if loop completes.
+1. Create 9 Sets for rows, 9 for columns, and 9 for boxes.
+2. Nested loop through all cells `(rowIndex, columnIndex)`.
+3. Skip empty cells (".").
+4. Identify the `boxIndex`.
+5. If the digit is already in the corresponding row/col/box set, return `false`.
+6. Add the digit to the sets.
+7. Return `true` if finish.
+
+### Edge Cases
+* **Empty Board:** Return `true`.
+* **Invalid Board with Multiple Violations:** Returns `false` at the first one found.
 
 ### JavaScript Solution
 ```javascript
 const isValidSudoku = (board) => {
-    const rowSets = Array.from({ length: 9 }, () => new Set());
-    const colSets = Array.from({ length: 9 }, () => new Set());
-    const boxSets = Array.from({ length: 9 }, () => new Set());
+    const rows = Array.from({ length: 9 }, () => new Set());
+    const cols = Array.from({ length: 9 }, () => new Set());
+    const boxes = Array.from({ length: 9 }, () => new Set());
 
     for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
         for (let colIndex = 0; colIndex < 9; colIndex++) {
-            const digit = board[rowIndex][colIndex];
-            if (digit === '.') continue;
+            const currentDigit = board[rowIndex][colIndex];
+            
+            if (currentDigit === ".") continue;
 
             const boxIndex = Math.floor(rowIndex / 3) * 3 + Math.floor(colIndex / 3);
 
-            if (rowSets[rowIndex].has(digit) || 
-                colSets[colIndex].has(digit) || 
-                boxSets[boxIndex].has(digit)) return false;
+            if (rows[rowIndex].has(currentDigit) || 
+                cols[colIndex].has(currentDigit) || 
+                boxes[boxIndex].has(currentDigit)) {
+                return false;
+            }
 
-            rowSets[rowIndex].add(digit);
-            colSets[colIndex].add(digit);
-            boxSets[boxIndex].add(digit);
+            rows[rowIndex].add(currentDigit);
+            cols[colIndex].add(currentDigit);
+            boxes[boxIndex].add(currentDigit);
         }
     }
+
     return true;
 };
 ```
@@ -291,38 +350,57 @@ const isValidSudoku = (board) => {
 [LintCode 659](https://www.lintcode.com/problem/659/)
 
 ### Complexity
-* **Time Complexity:** $O(n)$
-* **Space Complexity:** $O(n)$
+* **Time Complexity:** $O(totalCharacters)$
+* **Space Complexity:** $O(totalCharacters)$
 
 ### Key Intuition
-Prefix each string with its length and a delimiter (e.g., `length + "#" + string`). This handles cases where the delimiter itself is part of the original string.
+We cannot use a single delimiter because any character could be part of the string. The standard Senior approach is **Length-Prefixing**. We store `length + delimiter + string`.
 
 ### Pseudocode
-- **Encode**: For each string, append its length, a "#" character, and the string itself to a `resultString`.
+- **Encode**: For each string, append its length, a "#" symbol, and the string to a final builder string.
 - **Decode**: 
-    1. While `index` is less than string length:
-    2. Find the index of the next "#".
-    3. Parse the integer before "#" as `stringLength`.
-    4. Slice the string from `hashIndex + 1` to `hashIndex + 1 + stringLength`.
-    5. Append to result and update `index`.
+    1. Read the string until you hit "#" to get the `length`.
+    2. Slice the next `length` characters as the string.
+    3. Repeat from the new position.
+
+### Edge Cases
+* **Strings containing the delimiter:** `4#3#hi` (the string is `3#hi`). The length prefix `4` prevents confusion.
+* **Empty string in list:** Encoded as `0#`.
 
 ### JavaScript Solution
 ```javascript
-class Codec {
+class StringCodec {
+    /**
+     * @param {string[]} stringList
+     * @return {string}
+     */
     encode(stringList) {
-        return stringList.map(item => `${item.length}#${item}`).join("");
+        let encodedResult = "";
+        for (const currentString of stringList) {
+            encodedResult += `${currentString.length}#${currentString}`;
+        }
+        return encodedResult;
     }
 
+    /**
+     * @param {string} encodedString
+     * @return {string[]}
+     */
     decode(encodedString) {
         const decodedList = [];
-        let indexCounter = 0;
-        while (indexCounter < encodedString.length) {
-            let hashIndex = encodedString.indexOf("#", indexCounter);
-            let stringLength = parseInt(encodedString.substring(indexCounter, hashIndex));
-            let actualString = encodedString.substring(hashIndex + 1, hashIndex + 1 + stringLength);
-            decodedList.push(actualString);
-            indexCounter = hashIndex + 1 + stringLength;
+        let indexPointer = 0;
+
+        while (indexPointer < encodedString.length) {
+            let delimiterIndex = encodedString.indexOf("#", indexPointer);
+            let stringLength = parseInt(encodedString.substring(indexPointer, delimiterIndex));
+            
+            let stringStart = delimiterIndex + 1;
+            let stringEnd = stringStart + stringLength;
+            
+            decodedList.push(encodedString.substring(stringStart, stringEnd));
+            indexPointer = stringEnd;
         }
+
         return decodedList;
     }
 }
@@ -334,41 +412,47 @@ class Codec {
 [LeetCode 128](https://leetcode.com/problems/longest-consecutive-sequence/)
 
 ### Complexity
-* **Time Complexity:** $O(n)$
-* **Space Complexity:** $O(n)$
+* **Time Complexity:** $O(totalElements)$
+* **Space Complexity:** $O(totalElements)$
 
 ### Key Intuition
-Find the start of a sequence. A number `x` is the start of a sequence only if `x - 1` is not in the set.
+To achieve $O(N)$, we must avoid sorting. We use a Set for fast lookups. The trick is to only start counting a sequence if the current number is the **start** of a sequence (i.e., `num - 1` is not in the set).
 
 ### Pseudocode
-1. Put all numbers into a `numberSet`.
-2. Initialize `maxStreak` to 0.
-3. For each `number` in the set:
-    - If `number - 1` is NOT in the set:
-        - This is the start of a sequence.
-        - Count how many consecutive numbers exist (`number + 1`, `number + 2`...).
+1. Insert all numbers into `numberSet`.
+2. For each `currentNumber` in the set:
+    - If `currentNumber - 1` is NOT in the set:
+        - We found a potential start.
+        - While `currentNumber + 1` exists in the set, increment `currentStreak`.
         - Update `maxStreak`.
-4. Return `maxStreak`.
+3. Return `maxStreak`.
+
+### Edge Cases
+* **Empty Input:** Return 0.
+* **Duplicate Numbers:** Set handles duplicates automatically.
 
 ### JavaScript Solution
 ```javascript
 const longestConsecutive = (numbers) => {
     const numberSet = new Set(numbers);
-    let maxStreak = 0;
+    let maxSequenceLength = 0;
 
-    for (const number of numberSet) {
-        if (!numberSet.has(number - 1)) {
-            let currentNumber = number;
-            let currentStreak = 1;
+    for (const currentNumber of numberSet) {
+        // Only start a sequence if currentNumber is the beginning
+        if (!numberSet.has(currentNumber - 1)) {
+            let sequenceTracker = currentNumber;
+            let currentSequenceLength = 1;
 
-            while (numberSet.has(currentNumber + 1)) {
-                currentNumber++;
-                currentStreak++;
+            while (numberSet.has(sequenceTracker + 1)) {
+                sequenceTracker++;
+                currentSequenceLength++;
             }
-            maxStreak = Math.max(maxStreak, currentStreak);
+
+            maxSequenceLength = Math.max(maxSequenceLength, currentSequenceLength);
         }
     }
-    return maxStreak;
+
+    return maxSequenceLength;
 };
 ```
 
@@ -377,37 +461,47 @@ const longestConsecutive = (numbers) => {
 ## 10. Sort Colors
 [LeetCode 75](https://leetcode.com/problems/sort-colors/)
 
+
+
 ### Complexity
-* **Time Complexity:** $O(n)$
+* **Time Complexity:** $O(totalElements)$
 * **Space Complexity:** $O(1)$
 
 ### Key Intuition
-Dutch National Flag algorithm. Maintain three pointers: `low` (boundary for 0s), `high` (boundary for 2s), and `current` (the scanner).
+This is the **Dutch National Flag** algorithm. We use three pointers to partition the array into 0s, 1s, and 2s in a single pass. 
 
 ### Pseudocode
-1. Initialize `lowPointer = 0`, `currentPointer = 0`, `highPointer = length - 1`.
+1. `lowPointer = 0`, `currentPointer = 0`, `highPointer = length - 1`.
 2. While `currentPointer <= highPointer`:
-    - If `array[currentPointer]` is 0: Swap with `lowPointer`, increment both.
-    - If `array[currentPointer]` is 2: Swap with `highPointer`, decrement `highPointer` (don't increment `current` yet).
-    - If `array[currentPointer]` is 1: Just increment `currentPointer`.
+    - If `colors[currentPointer]` is 0: swap with `lowPointer`, increment both.
+    - If `colors[currentPointer]` is 2: swap with `highPointer`, decrement `highPointer`. (Do NOT increment `currentPointer` because the swapped value must be inspected).
+    - If `colors[currentPointer]` is 1: increment `currentPointer`.
+
+### Edge Cases
+* **All same colors:** Pointers will reach the end without swapping or with logical swaps.
+* **Already sorted:** Logic remains $O(N)$.
 
 ### JavaScript Solution
 ```javascript
 const sortColors = (colors) => {
-    let lowPointer = 0;
-    let currentPointer = 0;
-    let highPointer = colors.length - 1;
+    let lowBoundary = 0;
+    let currentInspector = 0;
+    let highBoundary = colors.length - 1;
 
-    while (currentPointer <= highPointer) {
-        if (colors[currentPointer] === 0) {
-            [colors[lowPointer], colors[currentPointer]] = [colors[currentPointer], colors[lowPointer]];
-            lowPointer++;
-            currentPointer++;
-        } else if (colors[currentPointer] === 2) {
-            [colors[highPointer], colors[currentPointer]] = [colors[currentPointer], colors[highPointer]];
-            highPointer--;
+    while (currentInspector <= highBoundary) {
+        if (colors[currentInspector] === 0) {
+            // Swap 0 to the front
+            [colors[lowBoundary], colors[currentInspector]] = [colors[currentInspector], colors[lowBoundary]];
+            lowBoundary++;
+            currentInspector++;
+        } else if (colors[currentInspector] === 2) {
+            // Swap 2 to the back
+            [colors[highBoundary], colors[currentInspector]] = [colors[currentInspector], colors[highBoundary]];
+            highBoundary--;
+            // Note: We don't increment currentInspector here
         } else {
-            currentPointer++;
+            // It's a 1, just move forward
+            currentInspector++;
         }
     }
 };
@@ -415,83 +509,109 @@ const sortColors = (colors) => {
 
 ---
 
-## 11. [TRENDING 2026] First Completely Painted Row or Column
+## 11. [LATEST 2026 TREND] First Completely Painted Row or Column
 [LeetCode 2661](https://leetcode.com/problems/first-completely-painted-row-or-column/)
 
 ### Complexity
-* **Time Complexity:** $O(rows \cdot cols)$
-* **Space Complexity:** $O(rows \cdot cols)$
+* **Time Complexity:** $O(rows \cdot columns)$
+* **Space Complexity:** $O(rows \cdot columns)$
 
 ### Key Intuition
-Pre-calculate the coordinates of every value in the matrix. As you iterate through the painting order, increment row and column counters.
+This problem tests **Coordinate Hashing**. You map every matrix value to its coordinates. Then, treat the "painting" as incrementing frequency counters for the specific row and column.
 
 ### Pseudocode
-1. Create a `positionMap` mapping each value to its `[row, col]` index.
-2. Initialize `rowCountArray` and `colCountArray` to zeros.
-3. Iterate through `paintingOrder` with `indexCounter`:
-    - Retrieve `[r, c]` for the current value from the map.
-    - Increment `rowCountArray[r]` and `colCountArray[c]`.
-    - If `rowCountArray[r] === totalColumns` or `colCountArray[c] === totalRows`, return `indexCounter`.
+1. Map every value in `matrix` to its `[rowIndex, colIndex]` in a Map.
+2. Initialize `rowCountTracking` and `colCountTracking` arrays with 0.
+3. Iterate through `paintingOrder` by `orderIndex`:
+    - Get the coordinates for the current value.
+    - Increment the count for that row and that column.
+    - If `rowCountTracking[row] === totalCols` or `colCountTracking[col] === totalRows`, return `orderIndex`.
+
+### Edge Cases
+* **1x1 Matrix:** Returns index 0 immediately.
+* **Large Matrix, Short Sequence:** Ensure memory doesn't overflow (though $O(N)$ is expected).
 
 ### JavaScript Solution
 ```javascript
-const firstCompleteIndex = (paintOrder, matrix) => {
-    const rowCount = matrix.length;
-    const colCount = matrix[0].length;
-    const positionMap = new Map();
+const firstCompleteIndex = (paintingOrder, matrix) => {
+    const totalRows = matrix.length;
+    const totalCols = matrix[0].length;
+    const valueToPositionMap = new Map();
 
-    for (let r = 0; r < rowCount; r++) {
-        for (let c = 0; c < colCount; c++) {
-            positionMap.set(matrix[r][c], [r, c]);
+    // Map values to their matrix coordinates
+    for (let rowIndex = 0; rowIndex < totalRows; rowIndex++) {
+        for (let colIndex = 0; colIndex < totalCols; colIndex++) {
+            valueToPositionMap.set(matrix[rowIndex][colIndex], [rowIndex, colIndex]);
         }
     }
 
-    const rowsPainted = new Array(rowCount).fill(0);
-    const colsPainted = new Array(colCount).fill(0);
+    const paintedInRow = new Array(totalRows).fill(0);
+    const paintedInCol = new Array(totalCols).fill(0);
 
-    for (let index = 0; index < paintOrder.length; index++) {
-        const [r, c] = positionMap.get(paintOrder[index]);
-        rowsPainted[r]++;
-        colsPainted[c]++;
-        if (rowsPainted[r] === colCount || colsPainted[c] === rowCount) return index;
+    for (let orderIndex = 0; orderIndex < paintingOrder.length; orderIndex++) {
+        const [row, col] = valueToPositionMap.get(paintingOrder[orderIndex]);
+
+        paintedInRow[row]++;
+        paintedInCol[col]++;
+
+        // Check if row or column is fully painted
+        if (paintedInRow[row] === totalCols || paintedInCol[col] === totalRows) {
+            return orderIndex;
+        }
     }
+
+    return -1;
 };
 ```
 
 ---
 
-## 12. [TRENDING 2026] Divide Array Into Arrays With Max Difference
+## 12. [LATEST 2026 TREND] Divide Array Into Arrays With Max Difference
 [LeetCode 2966](https://leetcode.com/problems/divide-array-into-arrays-with-max-difference/)
 
 ### Complexity
-* **Time Complexity:** $O(n \log n)$ (due to sorting)
-* **Space Complexity:** $O(n)$
+* **Time Complexity:** $O(totalElements \log totalElements)$
+* **Space Complexity:** $O(totalElements)$
 
 ### Key Intuition
-In 2026, many "Hashing" problems are actually "Sorting + Hashing/Grouping" hybrids. Sorting the array ensures that the three closest elements are always adjacent.
+This modern hybrid requires sorting followed by grouping. Sorting guarantees that for any trio of elements to satisfy `max - min <= k`, they must be adjacent. We use index-based grouping to validate the constraint.
 
 ### Pseudocode
-1. Sort the input array `numbers`.
-2. Initialize `resultGroups`.
-3. Loop through `numbers` in steps of 3:
-    - If `numbers[i+2] - numbers[i] > maxDifference`, return an empty array (impossible).
-    - Otherwise, push `[numbers[i], numbers[i+1], numbers[i+2]]` to `resultGroups`.
-4. Return `resultGroups`.
+1. Sort the `numbers` array numerically.
+2. Initialize `dividedResults`.
+3. Iterate through `numbers` in steps of 3:
+    - Compare the third element of the group with the first.
+    - If `third - first > maxDifference`, return `[]` (impossible).
+    - Otherwise, push the trio into `dividedResults`.
+4. Return the result list.
+
+### Edge Cases
+* **k is 0:** Only identical numbers can be grouped.
+* **Array length not divisible by 3:** (Problem usually guarantees divisible length, but handle if needed).
 
 ### JavaScript Solution
 ```javascript
 const divideArray = (numbers, maxDifference) => {
-    numbers.sort((numA, numB) => numA - numB);
-    const resultGroups = [];
+    // Sorting is necessary to find the closest elements
+    numbers.sort((a, b) => a - b);
+    const dividedResults = [];
 
     for (let indexCounter = 0; indexCounter < numbers.length; indexCounter += 3) {
-        const firstValue = numbers[indexCounter];
-        const thirdValue = numbers[indexCounter + 2];
-        
-        if (thirdValue - firstValue > maxDifference) return [];
-        
-        resultGroups.push([numbers[indexCounter], numbers[indexCounter + 1], numbers[indexCounter + 2]]);
+        const firstElement = numbers[indexCounter];
+        const thirdElement = numbers[indexCounter + 2];
+
+        // Because it's sorted, if (third - first) > k, the condition is impossible
+        if (thirdElement - firstElement > maxDifference) {
+            return [];
+        }
+
+        dividedResults.push([
+            numbers[indexCounter],
+            numbers[indexCounter + 1],
+            numbers[indexCounter + 2]
+        ]);
     }
-    return resultGroups;
+
+    return dividedResults;
 };
 ```
