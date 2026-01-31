@@ -3,42 +3,54 @@
 ## Valid Palindrome
 **LeetCode Link:** [https://leetcode.com/problems/valid-palindrome/](https://leetcode.com/problems/valid-palindrome/)
 
-**Complexity:** Time: $O(n)$ | Space: $O(1)$
+**Complexity:** Time: $O(totalLength)$ | Space: $O(1)$
 
-**Key Intuition:** Use two pointers starting at opposite ends to verify symmetry while skipping non-alphanumeric characters.
+**Key Intuition:** Use two pointers starting at opposite ends to compare characters while ignoring non-alphanumeric noise.
 
 **Pseudocode:**
-1. Initialize `left` at 0 and `right` at the last index.
-2. While `left < right`:
-    - If `left` character is not alphanumeric, increment `left`.
-    - Else if `right` character is not alphanumeric, decrement `right`.
-    - Else if characters at `left` and `right` (lowercase) don't match, return `false`.
-    - Otherwise, move both pointers inward.
-3. Return `true` if loop completes.
+1. Initialize `startIndex` at the beginning and `endIndex` at the end of the string.
+2. Iterate until pointers meet:
+    - Skip characters that are not alphanumeric by moving the respective pointer.
+    - Convert both characters to lowercase for comparison.
+    - If characters differ, the string is not a palindrome.
+3. If all valid comparisons match, return true.
 
 **Edge Cases:**
-- String with only special characters (e.g., "###") should be `true`.
-- Empty string is considered a valid palindrome.
-- Strings with mixed casing.
+- Empty strings or strings with only whitespace/punctuation (should return true).
+- Single character strings.
+- Mixed case alphanumeric characters.
 
 **JavaScript Solution:**
 ```javascript
-const isPalindrome = (s) => {
-    let l = 0, r = s.length - 1;
-    
-    while (l < r) {
-        // Skip non-alphanumeric characters using a regex check
-        if (!/[a-zA-Z0-9]/.test(s[l])) {
-            l++;
-        } else if (!/[a-zA-Z0-9]/.test(s[r])) {
-            r--;
+/**
+ * @param {string} inputString
+ * @return {boolean}
+ */
+const isPalindrome = (inputString) => {
+    let startIndex = 0;
+    let endIndex = inputString.length - 1;
+
+    while (startIndex < endIndex) {
+        const startChar = inputString[startIndex].toLowerCase();
+        const endChar = inputString[endIndex].toLowerCase();
+
+        // Check if characters are alphanumeric using a helper or regex
+        const isStartAlphanumeric = /[a-z0-9]/.test(startChar);
+        const isEndAlphanumeric = /[a-z0-9]/.test(endChar);
+
+        if (!isStartAlphanumeric) {
+            startIndex++;
+        } else if (!isEndAlphanumeric) {
+            endIndex--;
         } else {
-            // Compare characters case-insensitively
-            if (s[l].toLowerCase() !== s[r].toLowerCase()) return false;
-            l++;
-            r--;
+            if (startChar !== endChar) {
+                return false;
+            }
+            startIndex++;
+            endIndex--;
         }
     }
+
     return true;
 };
 ```
@@ -48,34 +60,49 @@ const isPalindrome = (s) => {
 ## Two Sum II - Input Array Is Sorted
 **LeetCode Link:** [https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/](https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/)
 
-**Complexity:** Time: $O(n)$ | Space: $O(1)$
+**Complexity:** Time: $O(totalCount)$ | Space: $O(1)$
 
-**Key Intuition:** Leverage the sorted property by moving pointers inward based on whether the current sum is too high or too low.
+**Key Intuition:** Since the array is sorted, we can control the sum by moving the left pointer to increase it or the right pointer to decrease it.
 
 **Pseudocode:**
-1. Place `left` at start, `right` at end.
-2. Calculate `sum = nums[left] + nums[right]`.
-3. If `sum === target`, return `[left + 1, right + 1]`.
-4. If `sum < target`, we need a larger value, so `left++`.
-5. If `sum > target`, we need a smaller value, so `right--`.
+1. Initialize `leftPointer` at 0 and `rightPointer` at the last index.
+2. Calculate the sum of elements at both pointers.
+3. If `currentSum` equals `targetValue`, return the 1-based indices.
+4. If `currentSum` is less than `targetValue`, increment `leftPointer`.
+5. If `currentSum` is greater than `targetValue`, decrement `rightPointer`.
 
 **Edge Cases:**
-- Array with exactly two elements.
-- Target sum involving negative numbers.
-- Sums that exceed integer limits (though not an issue in JS).
+- Negative numbers in the array.
+- Target value being the sum of the first two or last two elements.
+- Array with minimum size of 2.
 
 **JavaScript Solution:**
 ```javascript
-const twoSum = (numbers, target) => {
-    let l = 0, r = numbers.length - 1;
-    
-    while (l < r) {
-        const sum = numbers[l] + numbers[r];
-        if (sum === target) return [l + 1, r + 1];
-        
-        // Move pointers based on target comparison
-        sum < target ? l++ : r--;
+/**
+ * @param {number[]} sortedNumbers
+ * @param {number} targetValue
+ * @return {number[]}
+ */
+const twoSum = (sortedNumbers, targetValue) => {
+    let leftPointer = 0;
+    let rightPointer = sortedNumbers.length - 1;
+
+    while (leftPointer < rightPointer) {
+        const currentSum = sortedNumbers[leftPointer] + sortedNumbers[rightPointer];
+
+        if (currentSum === targetValue) {
+            // LeetCode requires 1-based indexing for this specific problem
+            return [leftPointer + 1, rightPointer + 1];
+        }
+
+        if (currentSum < targetValue) {
+            leftPointer++;
+        } else {
+            rightPointer--;
+        }
     }
+
+    return [];
 };
 ```
 
@@ -84,47 +111,70 @@ const twoSum = (numbers, target) => {
 ## 3Sum
 **LeetCode Link:** [https://leetcode.com/problems/3sum/](https://leetcode.com/problems/3sum/)
 
-**Complexity:** Time: $O(n^2)$ | Space: $O(1)$ or $O(n)$ depending on sorting implementation.
+**Complexity:** Time: $O(totalNumbers^2)$ | Space: $O(totalNumbers)$ or $O(\log totalNumbers)$ for sorting.
 
-**Key Intuition:** Fix one number and solve the "Two Sum II" problem for the rest, ensuring you skip duplicates at every step.
+**Key Intuition:** Sort the array and iterate through, fixing one number and using Two Pointers to find the remaining pair that sums to zero.
 
 **Pseudocode:**
-1. Sort the array.
-2. Iterate through `nums` with index `i`. If `nums[i] === nums[i-1]`, skip to avoid duplicates.
-3. Set `target = -nums[i]`.
-4. Use two pointers (`left = i + 1`, `right = length - 1`) to find pairs that sum to `target`.
-5. When a triplet is found, push to results and move pointers past duplicates.
+1. Sort the input array numerically.
+2. Iterate through the array with `currentIndex`.
+3. If `currentIndex` value is the same as the previous, skip to avoid duplicates.
+4. For each `currentIndex`, set `leftPointer` to `currentIndex + 1` and `rightPointer` to the end.
+5. While `leftPointer < rightPointer`:
+    - Calculate `totalSum`.
+    - If sum is 0, add triplet to `resultsList` and move both pointers past duplicates.
+    - If sum is too low, move `leftPointer` right; if too high, move `rightPointer` left.
 
 **Edge Cases:**
+- All zeros in the array.
 - Array with fewer than 3 elements.
-- Array with all zeros (e.g., `[0, 0, 0, 0]`).
-- No triplets exist that sum to zero.
+- Multiple duplicate triplets available in the input.
 
 **JavaScript Solution:**
 ```javascript
-const threeSum = (nums) => {
-    const res = [];
-    nums.sort((a, b) => a - b);
-    
-    for (let i = 0; i < nums.length - 2; i++) {
-        // Never reuse the same 'first' number to avoid duplicate triplets
-        if (i > 0 && nums[i] === nums[i - 1]) continue;
-        
-        let l = i + 1, r = nums.length - 1;
-        while (l < r) {
-            const sum = nums[i] + nums[l] + nums[r];
-            if (sum === 0) {
-                res.push([nums[i], nums[l], nums[r]]);
-                // Skip duplicates for the left pointer
-                while (l < r && nums[l] === nums[l + 1]) l++;
-                // Skip duplicates for the right pointer
-                while (l < r && nums[r] === nums[r - 1]) r--;
-                l++; r--;
-            } else if (sum < 0) l++;
-            else r--;
+/**
+ * @param {number[]} numbers
+ * @return {number[][]}
+ */
+const threeSum = (numbers) => {
+    const resultsList = [];
+    // Sort numbers in ascending order
+    numbers.sort((firstValue, secondValue) => firstValue - secondValue);
+
+    for (let currentIndex = 0; currentIndex < numbers.length - 2; currentIndex++) {
+        // Avoid duplicate triplets by checking the previous element
+        if (currentIndex > 0 && numbers[currentIndex] === numbers[currentIndex - 1]) {
+            continue;
+        }
+
+        let leftPointer = currentIndex + 1;
+        let rightPointer = numbers.length - 1;
+
+        while (leftPointer < rightPointer) {
+            const currentTotal = numbers[currentIndex] + numbers[leftPointer] + numbers[rightPointer];
+
+            if (currentTotal === 0) {
+                resultsList.push([numbers[currentIndex], numbers[leftPointer], numbers[rightPointer]]);
+                
+                // Skip identical values for the left and right pointers
+                while (leftPointer < rightPointer && numbers[leftPointer] === numbers[leftPointer + 1]) {
+                    leftPointer++;
+                }
+                while (leftPointer < rightPointer && numbers[rightPointer] === numbers[rightPointer - 1]) {
+                    rightPointer--;
+                }
+                
+                leftPointer++;
+                rightPointer--;
+            } else if (currentTotal < 0) {
+                leftPointer++;
+            } else {
+                rightPointer--;
+            }
         }
     }
-    return res;
+
+    return resultsList;
 };
 ```
 
@@ -133,85 +183,6 @@ const threeSum = (nums) => {
 ## Container with Most Water
 **LeetCode Link:** [https://leetcode.com/problems/container-with-most-water/](https://leetcode.com/problems/container-with-most-water/)
 
-**Complexity:** Time: $O(n)$ | Space: $O(1)$
+**Complexity:** Time: $O(totalHeights)$ | Space: $O(1)$
 
-**Key Intuition:** The area is limited by the shorter bar; moving the taller bar can only decrease area, so always move the shorter one.
-
-**Pseudocode:**
-1. Initialize `maxArea = 0`, `left = 0`, `right = length - 1`.
-2. While `left < right`:
-    - `currentArea = min(height[left], height[right]) * (right - left)`.
-    - Update `maxArea`.
-    - Move the pointer pointing to the smaller height inward.
-
-**Edge Cases:**
-- Array with only two bars.
-- Bars with zero height.
-- Array with bars of descending or ascending heights.
-
-**JavaScript Solution:**
-```javascript
-const maxArea = (height) => {
-    let max = 0, l = 0, r = height.length - 1;
-    
-    while (l < r) {
-        // Calculate area based on the shorter wall
-        const currentArea = Math.min(height[l], height[r]) * (r - l);
-        max = Math.max(max, currentArea);
-        
-        // Greedily move the shorter pointer
-        height[l] < height[r] ? l++ : r--;
-    }
-    return max;
-};
-```
-
----
-
-## 4Sum
-**LeetCode Link:** [https://leetcode.com/problems/4sum/](https://leetcode.com/problems/4sum/)
-
-**Complexity:** Time: $O(n^3)$ | Space: $O(n)$
-
-**Key Intuition:** Reduce the problem to 3Sum (and then to 2Sum) by nesting loops, while maintaining strict duplicate checks.
-
-**Pseudocode:**
-1. Sort the array.
-2. Use nested loops `i` and `j` to fix the first two numbers.
-3. For each pair, use Two Pointers (`left` and `right`) to find the remaining two.
-4. Calculate `sum = nums[i] + nums[j] + nums[left] + nums[right]`.
-5. If `sum === target`, add to results and skip duplicates for `left` and `right`.
-6. Else adjust `left` or `right` based on the sum comparison.
-
-**Edge Cases:**
-- Target is a very large positive or negative number.
-- Array contains many duplicate values.
-- Empty array or array length < 4.
-
-**JavaScript Solution:**
-```javascript
-const fourSum = (nums, target) => {
-    nums.sort((a, b) => a - b);
-    const res = [];
-    
-    for (let i = 0; i < nums.length - 3; i++) {
-        if (i > 0 && nums[i] === nums[i - 1]) continue;
-        for (let j = i + 1; j < nums.length - 2; j++) {
-            if (j > i + 1 && nums[j] === nums[j - 1]) continue;
-            
-            let l = j + 1, r = nums.length - 1;
-            while (l < r) {
-                const sum = nums[i] + nums[j] + nums[l] + nums[r];
-                if (sum === target) {
-                    res.push([nums[i], nums[j], nums[l], nums[r]]);
-                    while (l < r && nums[l] === nums[l + 1]) l++;
-                    while (l < r && nums[r] === nums[r - 1]) r--;
-                    l++; r--;
-                } else if (sum < target) l++;
-                else r--;
-            }
-        }
-    }
-    return res;
-};
-```
+**Key Intuition:** The volume is limited by the shorter wall; move the shorter wall inward to seek
