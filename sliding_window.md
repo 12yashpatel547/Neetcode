@@ -1,7 +1,4 @@
-# Senior Software Engineer's Guide: Sliding Window Patterns (2026 Edition)
-
-This guide covers the **Sliding Window** algorithmic pattern. In 2026, high-tier technical interviews at FAANG+ companies have shifted away from simple memorization. Interviewers now look for **variable-size window** mastery and the ability to handle **dynamic constraints** with optimal space-time trade-offs.
-
+# Sliding Window Patterns (2026 Edition)
 ---
 
 ## 1. Best Time to Buy & Sell Stock
