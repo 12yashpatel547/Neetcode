@@ -1,339 +1,338 @@
-# Sliding Window Patterns (2026 Edition)
+# Senior Engineer's Study Guide: Sliding Window Pattern
+
+The **Sliding Window** pattern is used to transform nested loops into a single loop, reducing time complexity from $O(n^2)$ to $O(n)$. It is typically applied to arrays or strings when searching for a sub-range that meets a specific criteria (e.g., longest, shortest, or specific sum).
+
 ---
 
 ## 1. Best Time to Buy & Sell Stock
-[LeetCode 121](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/)
+[https://leetcode.com/problems/best-time-to-buy-and-sell-stock/](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/)
 
-### Complexity
-* **Time Complexity:** $O(n)$ — Single pass through the pricing array.
-* **Space Complexity:** $O(1)$ — Only tracking two scalar variables.
-
-### Key Intuition
-While often categorized as "Greedy," this is a **Two-Pointer Sliding Window** problem where the "window" represents the time between buying and selling. We expand the right pointer to find a higher price, but if we find a new minimum (price at right < price at left), we "slide" the left pointer immediately to that new low to reset our potential profit base.
-
-### Pseudocode
-1. Initialize `leftPointer` at day 0 (buy day) and `rightPointer` at day 1 (sell day).
-2. Maintain a `maxProfit` variable at 0.
-3. While `rightPointer` is within the array bounds:
-   - If the price at `rightPointer` is greater than `leftPointer`, calculate current profit and update `maxProfit`.
-   - If the price at `rightPointer` is lower than `leftPointer`, move `leftPointer` to the `rightPointer` position (found a better buy day).
-   - Increment `rightPointer`.
-
-### Edge Cases
-* **Monotonically Decreasing Prices:** The window slides constantly, and `maxProfit` remains 0.
-* **Single Day/Empty Array:** Window cannot form; should return 0.
-
-### JavaScript Solution
+* **Complexity:** Time: $O(n)$ | Space: $O(1)$
+* **Key Intuition:** We only care about the lowest price seen so far and the maximum difference between that low and any subsequent price.
+* **The 'Talk Track':**
+    * "I’ll use a single-pass approach to maintain the minimum price encountered while simultaneously calculating the potential profit."
+    * "This is a dynamic window where the 'start' is the lowest point and the 'end' is our current traversal index."
+    * "I'm avoiding a nested loop by recognizing that we can't sell before we buy, so we only need to track the global minimum as we move forward."
+* **Pseudocode:**
+    1. Initialize `minPrice` to infinity and `maxProfit` to zero.
+    2. Iterate through `prices` using `currentPrice`.
+    3. If `currentPrice` is less than `minPrice`, update `minPrice`.
+    4. Else if `currentPrice - minPrice` is greater than `maxProfit`, update `maxProfit`.
+    5. Return `maxProfit`.
+* **JavaScript Solution:**
 ```javascript
-/**
- * @param {number[]} prices
- * @return {number}
- */
 const maxProfit = (prices) => {
-    let leftPointer = 0; // Buy day
-    let rightPointer = 1; // Sell day
-    let maxProfitValue = 0;
+  let minimumPriceSoFar = Infinity;
+  let maximumProfitFound = 0;
 
-    while (rightPointer < prices.length) {
-        if (prices[leftPointer] < prices[rightPointer]) {
-            const currentProfit = prices[rightPointer] - prices[leftPointer];
-            maxProfitValue = Math.max(maxProfitValue, currentProfit);
-        } else {
-            // Found a lower buying point, shift the window start
-            leftPointer = rightPointer;
-        }
-        rightPointer++;
+  for (let currentIndex = 0; currentIndex < prices.length; currentIndex++) {
+    const currentPrice = prices[currentIndex];
+
+    if (currentPrice < minimumPriceSoFar) {
+      minimumPriceSoFar = currentPrice;
+    } else {
+      const potentialProfit = currentPrice - minimumPriceSoFar;
+      if (potentialProfit > maximumProfitFound) {
+        maximumProfitFound = potentialProfit;
+      }
     }
+  }
 
-    return maxProfitValue;
+  return maximumProfitFound;
 };
 ```
+* **Dry Run (prices = [1, 2]):**
+    * `currentIndex` 0: `currentPrice` is 1. `minimumPriceSoFar` becomes 1.
+    * `currentIndex` 1: `currentPrice` is 2. `potentialProfit` is $2 - 1 = 1$. `maximumProfitFound` becomes 1.
+    * Result: 1.
+* **Alternative Approach:** We could treat this as a Kadane’s Algorithm problem by looking at the differences between adjacent days.
 
 ---
 
 ## 2. Longest Substring Without Repeating Characters
-[LeetCode 3](https://leetcode.com/problems/longest-substring-without-repeating-characters/)
+[https://leetcode.com/problems/longest-substring-without-repeating-characters/](https://leetcode.com/problems/longest-substring-without-repeating-characters/)
 
-### Complexity
-* **Time Complexity:** $O(n)$ — Each character is visited at most twice (once by each pointer).
-* **Space Complexity:** $O(min(m, n))$ — Where $m$ is the character set size (e.g., 26 for English, or total Unicode).
-
-### Key Intuition
-We use a **Dynamic Sliding Window**. The `rightPointer` expands the window by adding characters to a `Set`. If we encounter a duplicate, the window is "invalid." We must shrink the window from the `leftPointer` until the duplicate is removed, restoring the "no-repeat" invariant.
-
-### Pseudocode
-1. Initialize `leftPointer` at 0 and a `seenCharacters` Set.
-2. Iterate through the string with `rightPointer`.
-3. If `string[rightPointer]` is already in the set, delete `string[leftPointer]` from the set and increment `leftPointer` until the duplicate is gone.
-4. Add `string[rightPointer]` to the set.
-5. Update `maxSubstringLength` with the current window size (`rightPointer - leftPointer + 1`).
-
-### Edge Cases
-* **String with all identical characters:** Window size stays 1 throughout.
-* **Empty String:** Return 0 immediately.
-
-### JavaScript Solution
+* **Complexity:** Time: $O(n)$ | Space: $O(min(m, n))$ where $m$ is the size of the character set.
+* **Key Intuition:** Use a `Set` to track characters in the current window; when a duplicate appears, shrink the window from the left until the duplicate is gone.
+* **The 'Talk Track':**
+    * "I’ll use a `Set` for $O(1)$ lookups to detect character collisions."
+    * "When a collision occurs, I'll slide the left boundary of my window forward, effectively 'forgetting' characters until the window is valid again."
+    * "This ensures we only visit each character at most twice—once by the leading pointer and once by the trailing pointer."
+* **Pseudocode:**
+    1. Initialize `windowStart = 0`, `maxLength = 0`, and a `Set` called `uniqueCharacters`.
+    2. Iterate through the string with `windowEnd`.
+    3. While `string[windowEnd]` is in `uniqueCharacters`:
+       a. Remove `string[windowStart]` from the `Set`.
+       b. Increment `windowStart`.
+    4. Add `string[windowEnd]` to the `Set`.
+    5. Update `maxLength` with the current window size (`windowEnd - windowStart + 1`).
+* **JavaScript Solution:**
 ```javascript
 const lengthOfLongestSubstring = (inputString) => {
-    const seenCharacters = new Set();
-    let leftPointer = 0;
-    let maxSubstringLength = 0;
+  let windowStart = 0;
+  let maximumLength = 0;
+  const uniqueCharactersSet = new Set();
 
-    for (let rightPointer = 0; rightPointer < inputString.length; rightPointer++) {
-        const currentCharacter = inputString[rightPointer];
+  for (let windowEnd = 0; windowEnd < inputString.length; windowEnd++) {
+    const currentCharacter = inputString[windowEnd];
 
-        // Shrink window from the left until duplicate is removed
-        while (seenCharacters.has(currentCharacter)) {
-            seenCharacters.delete(inputString[leftPointer]);
-            leftPointer++;
-        }
-
-        seenCharacters.add(currentCharacter);
-        const currentWindowSize = rightPointer - leftPointer + 1;
-        maxSubstringLength = Math.max(maxSubstringLength, currentWindowSize);
+    while (uniqueCharactersSet.has(currentCharacter)) {
+      const characterAtStart = inputString[windowStart];
+      uniqueCharactersSet.delete(characterAtStart);
+      windowStart++;
     }
 
-    return maxSubstringLength;
+    uniqueCharactersSet.add(currentCharacter);
+    const currentWindowSize = windowEnd - windowStart + 1;
+    maximumLength = Math.max(maximumLength, currentWindowSize);
+  }
+
+  return maximumLength;
 };
 ```
+* **Dry Run (inputString = "aab"):**
+    * `windowEnd` 0: 'a' added, `max` = 1.
+    * `windowEnd` 1: 'a' exists. `windowStart` moves to 1, 'a' removed then re-added. `max` = 1.
+    * `windowEnd` 2: 'b' added, `max` = 2.
+    * Result: 2.
+* **Alternative Approach:** Using a Map to store character indices allows the `windowStart` to "jump" past the duplicate immediately, potentially reducing the number of operations.
 
 ---
 
 ## 3. Longest Repeating Character Replacement
-[LeetCode 424](https://leetcode.com/problems/longest-repeating-character-replacement/)
+[https://leetcode.com/problems/longest-repeating-character-replacement/](https://leetcode.com/problems/longest-repeating-character-replacement/)
 
-### Complexity
-* **Time Complexity:** $O(n)$ — Linear scan with a constant-time frequency map update.
-* **Space Complexity:** $O(1)$ — The frequency map stores at most 26 uppercase English letters.
-
-### Key Intuition
-The window is valid if: `(Window Length - Frequency of Most Frequent Character) <= k`. This formula represents the number of characters we *must* replace to make the entire window uniform. If this exceeds $k$, we slide the `leftPointer` to shrink the window.
-
-### Pseudocode
-1. Create a `frequencyMap` to track character counts in the current window.
-2. Maintain `maxCharacterFrequency` (the count of the most frequent char ever seen in *any* window).
-3. Expand `rightPointer`. Update `frequencyMap` and `maxCharacterFrequency`.
-4. While `(windowLength - maxCharacterFrequency) > k`:
-   - Decrement `frequencyMap[string[leftPointer]]`.
-   - Increment `leftPointer`.
-5. Update the result with the max window size found.
-
-### Edge Cases
-* **k is larger than string length:** Entire string can be replaced; return string length.
-* **k is 0:** Problem becomes "Find longest substring of identical characters."
-
-### JavaScript Solution
+* **Complexity:** Time: $O(n)$ | Space: $O(1)$ (since the frequency map is limited to 26 characters).
+* **Key Intuition:** A window is valid if (total characters - count of the most frequent character) $\le k$.
+* **The 'Talk Track':**
+    * "The core constraint here is identifying how many 'edits' we have left in our current window."
+    * "I will track the frequency of the most common character in the current window to determine if the remaining characters can be replaced within the $k$ limit."
+    * "Crucially, the `maxFrequency` doesn't strictly need to be decreased when the window shrinks, as a smaller `maxFrequency` wouldn't yield a larger window anyway."
+* **Pseudocode:**
+    1. Initialize `windowStart = 0`, `maxFrequency = 0`, and a `frequencyMap`.
+    2. Iterate with `windowEnd`.
+    3. Increment count of `string[windowEnd]` in `frequencyMap` and update `maxFrequency`.
+    4. While (`windowEnd - windowStart + 1`) - `maxFrequency` > `k`:
+       a. Decrement count of `string[windowStart]`.
+       b. Increment `windowStart`.
+    5. Update `result` with maximum window size.
+* **JavaScript Solution:**
 ```javascript
-const characterReplacement = (inputString, k) => {
-    const characterFrequency = {};
-    let leftPointer = 0;
-    let maxCharacterFrequency = 0;
-    let maxSubstringLength = 0;
+const characterReplacement = (inputString, allowedReplacements) => {
+  const characterCounts = {};
+  let windowStart = 0;
+  let maximumFrequencySeen = 0;
+  let longestValidSubstring = 0;
 
-    for (let rightPointer = 0; rightPointer < inputString.length; rightPointer++) {
-        const rightChar = inputString[rightPointer];
-        characterFrequency[rightChar] = (characterFrequency[rightChar] || 0) + 1;
-        
-        // Track the most frequent character in the current/past windows
-        maxCharacterFrequency = Math.max(maxCharacterFrequency, characterFrequency[rightChar]);
+  for (let windowEnd = 0; windowEnd < inputString.length; windowEnd++) {
+    const charAtEnd = inputString[windowEnd];
+    characterCounts[charAtEnd] = (characterCounts[charAtEnd] || 0) + 1;
+    maximumFrequencySeen = Math.max(maximumFrequencySeen, characterCounts[charAtEnd]);
 
-        // If window is invalid (too many replacements needed), shrink it
-        const currentWindowLength = rightPointer - leftPointer + 1;
-        if (currentWindowLength - maxCharacterFrequency > k) {
-            const leftChar = inputString[leftPointer];
-            characterFrequency[leftChar]--;
-            leftPointer++;
-        }
+    const currentWindowLength = windowEnd - windowStart + 1;
+    const charactersToReplace = currentWindowLength - maximumFrequencySeen;
 
-        maxSubstringLength = Math.max(maxSubstringLength, rightPointer - leftPointer + 1);
+    if (charactersToReplace > allowedReplacements) {
+      const charAtStart = inputString[windowStart];
+      characterCounts[charAtStart] -= 1;
+      windowStart++;
     }
 
-    return maxSubstringLength;
+    longestValidSubstring = Math.max(longestValidSubstring, windowEnd - windowStart + 1);
+  }
+
+  return longestValidSubstring;
 };
 ```
+* **Dry Run (s = "ABAB", k = 1):**
+    * `windowEnd` 2 (ABA): `maxFreq` = 2 ('A'). `length`(3) - 2 = 1. $1 \le 1$. Valid. `longest` = 3.
+    * `windowEnd` 3 (ABAB): `maxFreq` = 2. `length`(4) - 2 = 2. $2 > 1$. Shrink. `longest` = 3.
+    * Result: 3.
+* **Alternative Approach:** We could use a binary search on the answer length ($O(n \log n)$), but the sliding window is more optimal.
 
 ---
 
 ## 4. Permutation in String
-[LeetCode 567](https://leetcode.com/problems/permutation-in-string/)
+[https://leetcode.com/problems/permutation-in-string/](https://leetcode.com/problems/permutation-in-string/)
 
-### Complexity
-* **Time Complexity:** $O(n)$ — Specifically $O(length(s1) + length(s2))$.
-* **Space Complexity:** $O(1)$ — Two frequency arrays of size 26.
-
-### Key Intuition
-This is a **Fixed-Size Sliding Window**. The window size is always `s1.length`. We compare the character frequency of the current window in `s2` against the frequency of `s1`. In 2026 interviews, using an array of size 26 is preferred over a Hash Map for $O(1)$ space optimization.
-
-### Pseudocode
-1. If `s1` is longer than `s2`, return false.
-2. Initialize two frequency arrays (`s1Counts`, `s2Counts`) for 'a'-'z'.
-3. Populate `s1Counts` and the first window of `s2Counts`.
-4. Iterate from `s1.length` to `s2.length`:
-   - If frequencies match, return true.
-   - Slide window: Add `s2[rightPointer]` and remove `s2[leftPointer]`.
-5. Return final frequency comparison.
-
-### Edge Cases
-* **s1 is length 1:** Checks if char exists in s2.
-* **s1 and s2 are identical:** Returns true.
-
-### JavaScript Solution
+* **Complexity:** Time: $O(n)$ | Space: $O(1)$
+* **Key Intuition:** A permutation means a window in `s2` must have the exact same character frequency counts as `s1`.
+* **The 'Talk Track':**
+    * "I’ll use a fixed-size sliding window equal to the length of `string1`."
+    * "Instead of re-sorting or re-counting everything, I’ll maintain a running frequency count and a `matches` variable to track how many characters meet the required frequency."
+    * "This optimization allows me to check for a permutation in $O(1)$ time per window slide."
+* **Pseudocode:**
+    1. If `s1.length > s2.length`, return `false`.
+    2. Create two 26-slot arrays for char counts.
+    3. Fill counts for the first `s1.length` characters.
+    4. Count how many indices in the arrays match.
+    5. Slide the window through `s2`: add one char, remove one char, and update the match count.
+    6. If `matches === 26` at any point, return `true`.
+* **JavaScript Solution:**
 ```javascript
-const checkInclusion = (searchString, targetString) => {
-    if (searchString.length > targetString.length) return false;
+const checkInclusion = (searchString, containerString) => {
+  const searchLength = searchString.length;
+  const containerLength = containerString.length;
+  if (searchLength > containerLength) return false;
 
-    const searchFrequencies = new Array(26).fill(0);
-    const windowFrequencies = new Array(26).fill(0);
-    const charCodeOffset = 'a'.charCodeAt(0);
+  const searchCounts = new Array(26).fill(0);
+  const currentWindowCounts = new Array(26).fill(0);
 
-    // Initial window population
-    for (let index = 0; index < searchString.length; index++) {
-        searchFrequencies[searchString.charCodeAt(index) - charCodeOffset]++;
-        windowFrequencies[targetString.charCodeAt(index) - charCodeOffset]++;
+  const getCharIndex = (char) => char.charCodeAt(0) - 'a'.charCodeAt(0);
+
+  for (let currentIndex = 0; currentIndex < searchLength; currentIndex++) {
+    searchCounts[getCharIndex(searchString[currentIndex])]++;
+    currentWindowCounts[getCharIndex(containerString[currentIndex])]++;
+  }
+
+  let totalMatches = 0;
+  for (let index = 0; index < 26; index++) {
+    if (searchCounts[index] === currentWindowCounts[index]) totalMatches++;
+  }
+
+  for (let windowEnd = searchLength; windowEnd < containerLength; windowEnd++) {
+    if (totalMatches === 26) return true;
+
+    const charToAdd = getCharIndex(containerString[windowEnd]);
+    currentWindowCounts[charToAdd]++;
+    if (currentWindowCounts[charToAdd] === searchCounts[charToAdd]) {
+      totalMatches++;
+    } else if (currentWindowCounts[charToAdd] === searchCounts[charToAdd] + 1) {
+      totalMatches--;
     }
 
-    let matchesCount = 0;
-    for (let i = 0; i < 26; i++) {
-        if (searchFrequencies[i] === windowFrequencies[i]) matchesCount++;
+    const charToRemove = getCharIndex(containerString[windowEnd - searchLength]);
+    currentWindowCounts[charToRemove]--;
+    if (currentWindowCounts[charToRemove] === searchCounts[charToRemove]) {
+      totalMatches++;
+    } else if (currentWindowCounts[charToRemove] === searchCounts[charToRemove] - 1) {
+      totalMatches--;
     }
+  }
 
-    for (let rightPointer = searchString.length; rightPointer < targetString.length; rightPointer++) {
-        if (matchesCount === 26) return true;
-
-        const leftPointer = rightPointer - searchString.length;
-        
-        // Add new character to window
-        updateFrequencies(targetString[rightPointer], 1);
-        // Remove old character from window
-        updateFrequencies(targetString[leftPointer], -1);
-    }
-
-    function updateFrequencies(char, delta) {
-        const index = char.charCodeAt(0) - charCodeOffset;
-        const prevMatch = windowFrequencies[index] === searchFrequencies[index];
-        windowFrequencies[index] += delta;
-        const nowMatch = windowFrequencies[index] === searchFrequencies[index];
-        
-        if (!prevMatch && nowMatch) matchesCount++;
-        else if (prevMatch && !nowMatch) matchesCount--;
-    }
-
-    return matchesCount === 26;
+  return totalMatches === 26;
 };
 ```
+* **Dry Run (s1 = "ab", s2 = "ba"):**
+    * Initial: `searchCounts` {a:1, b:1}, `currentWindow` {b:1, a:1}.
+    * `totalMatches` = 26.
+    * Result: `true`.
+* **Alternative Approach:** You could use a simple Hash Map and compare it at every step, but the fixed array is faster for lowercase English letters.
 
 ---
 
-## 5. [NEW 2026 TREND] Maximum Sum of Distinct Subarrays With Length K
-[LeetCode 2461](https://leetcode.com/problems/maximum-sum-of-distinct-subarrays-with-length-k/)
+## 5. [Latest 2026] Maximum Sum of Distinct Subarrays With Length K
+[https://leetcode.com/problems/maximum-sum-of-distinct-subarrays-with-length-k/](https://leetcode.com/problems/maximum-sum-of-distinct-subarrays-with-length-k/)
 
-### Complexity
-* **Time Complexity:** $O(n)$ — Single pass using a fixed-size window.
-* **Space Complexity:** $O(k)$ — Set/Map to store up to $k$ distinct elements.
-
-### Key Intuition
-This combines **Fixed-Size Sliding Window** with **Distinctness Constraints**. Modern interviews use this to test if you can manage multiple state variables (sum + count + set) simultaneously without $O(n^2)$ overhead.
-
-### Pseudocode
-1. Use a `Set` to track uniqueness and a `currentSum` variable.
-2. Slide a window of size `k`.
-3. If the window has exactly `k` elements AND the `Set.size` is `k`, update `maxSum`.
-4. When moving the window: subtract the element exiting the left and add the element entering the right.
-
-### JavaScript Solution
+* **Complexity:** Time: $O(n)$ | Space: $O(k)$
+* **Key Intuition:** Combine a fixed-size window with a `Map` to ensure all $k$ elements are unique while maintaining a running sum.
+* **The 'Talk Track':**
+    * "We need a fixed window of size $k$ where the 'distinct' constraint is the primary challenge."
+    * "I'll use a `Map` to track frequencies within the window; if the `Map` size equals $k$, I know all elements are unique."
+    * "This is a clean example of combining the Sliding Window with a Hash Map for efficient state tracking."
+* **Pseudocode:**
+    1. Initialize `windowStart = 0`, `currentSum = 0`, `maxSum = 0`, and `elementCounts` Map.
+    2. Iterate with `windowEnd`:
+       a. Add `nums[windowEnd]` to `currentSum` and update `elementCounts`.
+       b. If `windowEnd - windowStart + 1 > k`:
+          i. Remove `nums[windowStart]` from `currentSum` and `elementCounts`.
+          ii. Increment `windowStart`.
+       c. If window size is `k` and `elementCounts.size` is `k`, update `maxSum`.
+* **JavaScript Solution:**
 ```javascript
 const maximumSubarraySum = (nums, k) => {
-    let maxTotalSum = 0;
-    let currentWindowSum = 0;
-    let leftPointer = 0;
-    const distinctElements = new Map();
+  let maximumSumValue = 0;
+  let currentWindowSum = 0;
+  let windowStart = 0;
+  const frequencyMap = new Map();
 
-    for (let rightPointer = 0; rightPointer < nums.length; rightPointer++) {
-        const incomingValue = nums[rightPointer];
-        currentWindowSum += incomingValue;
-        distinctElements.set(incomingValue, (distinctElements.get(incomingValue) || 0) + 1);
+  for (let windowEnd = 0; windowEnd < nums.length; windowEnd++) {
+    const numToAdd = nums[windowEnd];
+    currentWindowSum += numToAdd;
+    frequencyMap.set(numToAdd, (frequencyMap.get(numToAdd) || 0) + 1);
 
-        // Once window size reaches K
-        if (rightPointer - leftPointer + 1 === k) {
-            // Check if all elements in the map are distinct
-            if (distinctElements.size === k) {
-                maxTotalSum = Math.max(maxTotalSum, currentWindowSum);
-            }
-
-            // Shrink window from left to prepare for next slide
-            const outgoingValue = nums[leftPointer];
-            currentWindowSum -= outgoingValue;
-            
-            const currentFreq = distinctElements.get(outgoingValue);
-            if (currentFreq === 1) {
-                distinctElements.delete(outgoingValue);
-            } else {
-                distinctElements.set(outgoingValue, currentFreq - 1);
-            }
-            leftPointer++;
-        }
+    if (windowEnd - windowStart + 1 > k) {
+      const numToRemove = nums[windowStart];
+      currentWindowSum -= numToRemove;
+      
+      const count = frequencyMap.get(numToRemove);
+      if (count === 1) {
+        frequencyMap.delete(numToRemove);
+      } else {
+        frequencyMap.set(numToRemove, count - 1);
+      }
+      windowStart++;
     }
 
-    return maxTotalSum;
+    if (windowEnd - windowStart + 1 === k) {
+      if (frequencyMap.size === k) {
+        maximumSumValue = Math.max(maximumSumValue, currentWindowSum);
+      }
+    }
+  }
+
+  return maximumSumValue;
 };
 ```
+* **Dry Run (nums = [1, 2], k = 2):**
+    * `windowEnd` 1: `currentSum` = 3. `Map` size = 2.
+    * Window size is 2, `Map` size is 2. `maxSum` = 3.
+    * Result: 3.
+* **Alternative Approach:** We could use a Set to check uniqueness, but a Map is necessary to handle the window sliding logic correctly when duplicate values enter or leave.
 
 ---
 
-## 6. [NEW 2026 TREND] Minimum Window Substring
-[LeetCode 76](https://leetcode.com/problems/minimum-window-substring/)
+## 6. [Latest 2026] Count Subarrays Where Max Element Appears at Least K Times
+[https://leetcode.com/problems/count-subarrays-where-max-element-appears-at-least-k-times/](https://leetcode.com/problems/count-subarrays-where-max-element-appears-at-least-k-times/)
 
-### Complexity
-* **Time Complexity:** $O(n + m)$ — Where $n$ is length of string $s$ and $m$ is length of $t$.
-* **Space Complexity:** $O(m)$ — To store frequency of characters in $t$.
-
-### Key Intuition
-The "Hard" evolution of the pattern. You expand until the window is "saturated" (contains all required characters), then shrink from the left as much as possible while maintaining saturation to find the *minimum* length.
-
-### JavaScript Solution
+* **Complexity:** Time: $O(n)$ | Space: $O(1)$
+* **Key Intuition:** Once a window ending at `windowEnd` is valid, any subarray starting at an index before or at `windowStart` and ending at `windowEnd` is also valid.
+* **The 'Talk Track':**
+    * "First, I'll identify the global maximum in a single pass."
+    * "Then, I'll expand the window until I have at least $k$ instances of that max element."
+    * "The critical insight is that if a window from `windowStart` to `windowEnd` is valid, then all windows starting from 0 to `windowStart` are also valid for this specific `windowEnd`."
+* **Pseudocode:**
+    1. Find `maxElement` in `nums`.
+    2. Iterate with `windowEnd`:
+       a. If `nums[windowEnd] === maxElement`, increment `count`.
+       b. While `count === k`:
+          i. If `nums[windowStart] === maxElement`, decrement `count`.
+          ii. Increment `windowStart`.
+       c. Add `windowStart` to the `totalSubarrays`.
+* **JavaScript Solution:**
 ```javascript
-const minWindow = (sourceString, targetString) => {
-    if (!targetString.length) return "";
+const countSubarrays = (nums, k) => {
+  const maxElement = Math.max(...nums);
+  let totalValidSubarrays = 0;
+  let windowStart = 0;
+  let maxElementCountInWindow = 0;
 
-    const targetFrequency = {};
-    for (const char of targetString) {
-        targetFrequency[char] = (targetFrequency[char] || 0) + 1;
+  for (let windowEnd = 0; windowEnd < nums.length; windowEnd++) {
+    if (nums[windowEnd] === maxElement) {
+      maxElementCountInWindow++;
     }
 
-    const windowFrequency = {};
-    let requiredMatches = Object.keys(targetFrequency).length;
-    let currentMatches = 0;
-    
-    let resultRange = [-1, -1];
-    let minWindowLength = Infinity;
-    let leftPointer = 0;
-
-    for (let rightPointer = 0; rightPointer < sourceString.length; rightPointer++) {
-        const char = sourceString[rightPointer];
-        windowFrequency[char] = (windowFrequency[char] || 0) + 1;
-
-        if (targetFrequency[char] && windowFrequency[char] === targetFrequency[char]) {
-            currentMatches++;
-        }
-
-        // Try to shrink the window while it's still valid
-        while (currentMatches === requiredMatches) {
-            const currentWindowSize = rightPointer - leftPointer + 1;
-            if (currentWindowSize < minWindowLength) {
-                minWindowLength = currentWindowSize;
-                resultRange = [leftPointer, rightPointer];
-            }
-
-            const leftChar = sourceString[leftPointer];
-            windowFrequency[leftChar]--;
-            if (targetFrequency[leftChar] && windowFrequency[leftChar] < targetFrequency[leftChar]) {
-                currentMatches--;
-            }
-            leftPointer++;
-        }
+    while (maxElementCountInWindow === k) {
+      if (nums[windowStart] === maxElement) {
+        maxElementCountInWindow--;
+      }
+      windowStart++;
     }
 
-    const [start, end] = resultRange;
-    return minWindowLength === Infinity ? "" : sourceString.substring(start, end + 1);
+    // Every index from 0 to windowStart - 1 forms a valid subarray ending at windowEnd
+    totalValidSubarrays += windowStart;
+  }
+
+  return totalValidSubarrays;
 };
 ```
+* **Dry Run (nums = [1, 1], k = 1):**
+    * `maxElement` = 1.
+    * `windowEnd` 0: `count` = 1. `while` loop runs: `windowStart` = 1, `count` = 0. `total` = 1.
+    * `windowEnd` 1: `count` = 1. `while` loop runs: `windowStart` = 2, `count` = 0. `total` = 1 + 2 = 3.
+    * Result: 3.
+* **Alternative Approach:** We could store the indices of the max element in an array and use them to calculate distances, but this sliding window is more memory-efficient.
+
+---
+
+Would you like me to analyze a different pattern next, such as **Trees** or **Dynamic Programming**?
