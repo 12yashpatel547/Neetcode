@@ -284,5 +284,3 @@ const appendCharacters = (source, target) => {
     * Loop finds "a", "b", "c". `targetPtr` reaches 3.
     * Loop ends. Return `4 - 3 = 1`.
 * **Alternative Approach:** There isn't a significantly better way; this is the optimal $O(n)$ approach.
-
-Would you like to move on to the **Sliding Window** or **Stack** algorithmic category?
