@@ -1,8 +1,4 @@
 # Senior Software Engineer Study Guide: Arrays & Hashing (2026 Edition)
-
-## Overview & Trend Analysis
-As a senior engineer, I categorize the **Arrays & Hashing** pattern not just as "using a Map," but as the art of **Frequency Analysis** and **State Mapping**. In 2026, high-tier interviews focus on one-pass solutions and minimizing auxiliary space. The trending problems (11 and 12) specifically test your ability to map 2D coordinates into 1D frequency arrays and apply greedy logic to sorted hashing.
-
 ---
 
 ## 1. Contains Duplicate
